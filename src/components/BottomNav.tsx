@@ -11,24 +11,31 @@ interface BottomNavProps {
 const BottomNav = ({ navigation, activeTab }: BottomNavProps) => {
   const { colors, isDark } = useTheme();
 
-  const NavItem = ({ name, icon, label, target, isActive, params }: any) => (
-    <TouchableOpacity 
-      style={styles.navItem} 
-      onPress={() => navigation.navigate(target, params)}
-      activeOpacity={0.7}
-    >
-      {isActive ? (
-        <View style={[styles.activeNavBg, { backgroundColor: isDark ? colors.primaryContainer : '#E0E7FF' }]}>
-          <Icon name={icon} size={26} color={colors.primary} />
+  const NavItem = ({ name, icon, label, target, isActive, params }: any) => {
+    const isScanner = name === 'scanner';
+    
+    return (
+      <TouchableOpacity 
+        style={[styles.navItem, isScanner && styles.scannerNavItem]} 
+        onPress={() => navigation.navigate(target, params)}
+        activeOpacity={0.7}
+      >
+        <View style={[
+          isScanner ? styles.scannerBg : styles.activeNavBg, 
+          isActive ? { backgroundColor: isDark ? colors.primaryContainer : '#E0E7FF' } : (isScanner ? { backgroundColor: isDark ? colors.card : '#F8FAFC' } : null)
+        ]}>
+          <Icon 
+            name={isActive ? icon : `${icon}-outline`} 
+            size={isScanner ? 28 : 26} 
+            color={isActive ? colors.primary : colors.textTertiary} 
+          />
         </View>
-      ) : (
-        <Icon name={`${icon}-outline`} size={26} color={colors.textTertiary} />
-      )}
-      <Text style={[styles.navText, { color: isActive ? colors.primary : colors.textTertiary }]}>
-        {label}
-      </Text>
-    </TouchableOpacity>
-  );
+        <Text style={[styles.navText, { color: isActive ? colors.primary : colors.textTertiary }]}>
+          {label}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={[styles.container, { borderTopColor: colors.border, backgroundColor: colors.background }]}>
@@ -62,13 +69,14 @@ const BottomNav = ({ navigation, activeTab }: BottomNavProps) => {
 
 const styles = StyleSheet.create({
   container: {
-    height: 80,
+    height: 90,
     borderTopWidth: 1,
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
     justifyContent: 'center',
+    paddingBottom: 10,
   },
   navRow: {
     flexDirection: 'row',
@@ -81,6 +89,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flex: 1,
   },
+  scannerNavItem: {
+    flex: 1.2,
+  },
   activeNavBg: {
     width: 60,
     height: 48,
@@ -88,6 +99,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 4,
+  },
+  scannerBg: {
+    width: 70,
+    height: 54,
+    borderRadius: 27, // Oval/Pill shape
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 4,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   navText: {
     fontSize: 10,
