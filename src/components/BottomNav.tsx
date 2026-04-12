@@ -18,7 +18,7 @@ const BottomNav = ({ navigation, activeTab }: BottomNavProps) => {
       activeOpacity={0.7}
     >
       {isActive ? (
-        <View style={[styles.activeNavBg, { backgroundColor: isDark ? colors.primaryContainer : '#F5F8FF' }]}>
+        <View style={[styles.activeNavBg, { backgroundColor: isDark ? colors.primaryContainer : '#E0E7FF' }]}>
           <Icon name={icon} size={26} color={colors.primary} />
         </View>
       ) : (
@@ -62,7 +62,7 @@ const BottomNav = ({ navigation, activeTab }: BottomNavProps) => {
 
 const styles = StyleSheet.create({
   container: {
-    height: 90,
+    height: 80,
     borderTopWidth: 1,
     position: 'absolute',
     bottom: 0,
