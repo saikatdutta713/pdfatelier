@@ -1,0 +1,29 @@
+diff --git a/node_modules/react-native-image-to-pdf/android/build.gradle b/node_modules/react-native-image-to-pdf/android/build.gradle
+index c098672..2e4d669 100644
+--- a/node_modules/react-native-image-to-pdf/android/build.gradle
++++ b/node_modules/react-native-image-to-pdf/android/build.gradle
+@@ -1,6 +1,6 @@
+ buildscript {
+     repositories {
+-        jcenter()
++        mavenCentral()
+         google()
+     }
+     dependencies {
+@@ -14,12 +14,12 @@ buildscript {
+ apply plugin: 'com.android.library'
+ 
+ android {
+-    compileSdkVersion 28
+-    buildToolsVersion "28.0.3"
++    compileSdkVersion 36
++    buildToolsVersion "36.0.0"
+ 
+     defaultConfig {
+-        minSdkVersion 19
+-        targetSdkVersion 28
++        minSdkVersion 24
++        targetSdkVersion 36
+         versionCode 1
+         versionName "1.0"
+     }
