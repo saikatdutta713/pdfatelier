@@ -8,7 +8,7 @@ import InfoModal from '../components/InfoModal';
 import RNFS from 'react-native-fs';
 import BottomNav from '../components/BottomNav';
 
-const bannerAdUnitId = __DEV__ ? TestIds.BANNER : 'ca-app-pub-1160568075790150/7611090332';
+const bannerAdUnitId = __DEV__ ? TestIds.BANNER : 'ca-app-pub-1160568075790150/3063915712';
 
 const SettingsScreen = ({ navigation }: any) => {
   const { theme, toggleTheme, colors, isDark } = useTheme();
@@ -309,7 +309,9 @@ const styles = StyleSheet.create({
   bannerContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
+    width: '100%',
+    minHeight: 60,
+    marginBottom: 90, // Space for BottomNav
     backgroundColor: 'transparent',
   },
 });

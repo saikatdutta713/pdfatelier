@@ -17,6 +17,7 @@ import { displayNotification } from '../utils/notifications';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import * as ImagePicker from 'react-native-image-picker';
 import { convertImagesToPdf, formatFileSize } from '../utils/pdfHelper';
+import { requestMediaPermission, requestStoragePermission } from '../utils/permissions';
 import ProgressLoader from '../components/ProgressLoader';
 import InfoModal from '../components/InfoModal';
 import { InterstitialAd, AdEventType, TestIds, BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
@@ -27,11 +28,13 @@ import DraggableFlatList, {
   ScaleDecorator,
 } from 'react-native-draggable-flatlist';
 import BottomNav from '../components/BottomNav';
+import LinearGradient from 'react-native-linear-gradient';
+import Animated, { FadeInUp, FadeInDown, SpringUtils } from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
 
 const adUnitId = __DEV__ ? TestIds.INTERSTITIAL : 'ca-app-pub-1160568075790150/9036704803';
-const bannerAdUnitId = __DEV__ ? TestIds.BANNER : 'ca-app-pub-1160568075790150/7611090332';
+const bannerAdUnitId = __DEV__ ? TestIds.BANNER : 'ca-app-pub-1160568075790150/3063915712';
 const interstitial = InterstitialAd.createForAdRequest(adUnitId, {
   requestNonPersonalizedAdsOnly: true,
 });
@@ -95,7 +98,10 @@ const ImageToPdfScreen = ({ navigation, route }: any) => {
     setModalVisible(true);
   }, []);
 
-  const selectImages = () => {
+  const selectImages = async () => {
+    const hasPermission = await requestMediaPermission();
+    if (!hasPermission) return;
+
     ImagePicker.launchImageLibrary(
       { mediaType: 'photo', selectionLimit: 0, quality: 0.8 },
       (response) => {
@@ -114,7 +120,10 @@ const ImageToPdfScreen = ({ navigation, route }: any) => {
     );
   };
 
-  const takePhoto = () => {
+  const takePhoto = async () => {
+    const hasPermission = await requestMediaPermission();
+    if (!hasPermission) return;
+
     ImagePicker.launchCamera(
       { mediaType: 'photo', quality: 0.8, saveToPhotos: true },
       (response) => {
@@ -265,57 +274,104 @@ const ImageToPdfScreen = ({ navigation, route }: any) => {
               <View style={{ width: 44 }} />
             </View>
 
-            <View style={styles.successContent}>
-              <View style={styles.successIconWrapper}>
-                <View style={[styles.successBadge, { backgroundColor: colors.primary }]}>
-                  <Icon name="check" size={50} color="#FFFFFF" />
-                </View>
-              </View>
-              
-              <Text style={[styles.successMainTitle, { color: colors.text }]}>PDF Created{"\n"}Successfully</Text>
-              <Text style={[styles.successSubTitle, { color: colors.textSecondary }]}>
-                Your document is ready to be shared or saved.
-              </Text>
-
-              <View style={[styles.resultCard, { backgroundColor: colors.card }]}>
-                <View style={styles.resultIconBg}>
-                  <Icon name="file-document-outline" size={32} color={colors.textTertiary} />
-                </View>
-                <View style={styles.resultInfo}>
-                  <Text style={[styles.resultName, { color: colors.text }]} numberOfLines={1}>{successData.name}</Text>
-                  <Text style={[styles.resultMeta, { color: colors.textSecondary }]}>{successData.size} • JUST NOW</Text>
-                </View>
-                <TouchableOpacity style={styles.moreOptions}>
-                   <Icon name="dots-vertical" size={20} color={colors.textSecondary} />
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.successActions}>
-                <TouchableOpacity 
-                   onPress={handleOpen}
-                   style={[styles.primaryActionBtn, { backgroundColor: colors.primary }]}
+            <ScrollView contentContainerStyle={styles.successContent} showsVerticalScrollIndicator={false}>
+              <Animated.View 
+                entering={FadeInUp.delay(200).duration(800)}
+                style={styles.successIllustration}
+              >
+                <LinearGradient
+                  colors={[colors.primary, colors.primary + '99']}
+                  style={styles.gradientCircle}
                 >
-                  <Icon name="open-in-new" size={22} color="#FFFFFF" />
-                  <Text style={styles.primaryActionText}>Open</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={[styles.secondaryActionBtn, { backgroundColor: colors.primaryContainer }]} onPress={handleShare}>
-                  <Icon name="share-variant" size={22} color={colors.text} />
-                  <Text style={[styles.secondaryActionText, { color: colors.text }]}>Share</Text>
-                </TouchableOpacity>
-              </View>
-
-              <TouchableOpacity style={styles.footerLink} onPress={resetConversion}>
-                <View style={styles.footerLinkRow}>
-                  <Icon name="arrow-left" size={20} color={colors.textSecondary} />
-                  <Text style={[styles.footerLinkText, { color: colors.textSecondary }]}>Convert another</Text>
+                  <Icon name="file-check" size={60} color="#FFFFFF" />
+                </LinearGradient>
+                <View style={[styles.confettiContainer, { opacity: 0.6 }]}>
+                  {[...Array(6)].map((_, i) => (
+                    <View 
+                      key={i} 
+                      style={[
+                        styles.confetti, 
+                        { 
+                          backgroundColor: i % 2 === 0 ? colors.primary : colors.secondary,
+                          transform: [{ rotate: `${i * 60}deg` }, { translateY: -70 }]
+                        }
+                      ]} 
+                    />
+                  ))}
                 </View>
-              </TouchableOpacity>
-            </View>
+              </Animated.View>
+              
+              <Animated.View entering={FadeInDown.delay(400).duration(800)} style={styles.textCenter}>
+                <Text style={[styles.successMainTitle, { color: colors.text }]}>Great Job!</Text>
+                <Text style={[styles.successSubTitle, { color: colors.textSecondary }]}>
+                  Your high-quality PDF has been generated and is ready for use.
+                </Text>
+              </Animated.View>
+
+              <Animated.View 
+                entering={FadeInDown.delay(600).duration(800)}
+                style={[styles.premiumResultCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+              >
+                <View style={[styles.fileIconWrapper, { backgroundColor: colors.primary + '15' }]}>
+                  <Icon name="pdf-box" size={40} color={colors.primary} />
+                </View>
+                <View style={styles.fileDetails}>
+                  <Text style={[styles.fileNameText, { color: colors.text }]} numberOfLines={1}>{successData.name}</Text>
+                  <View style={styles.fileMetaRow}>
+                    <Text style={[styles.fileMetaText, { color: colors.textSecondary }]}>{successData.size}</Text>
+                    <View style={[styles.dot, { backgroundColor: colors.textTertiary }]} />
+                    <Text style={[styles.fileMetaText, { color: colors.textSecondary }]}>PDF Document</Text>
+                  </View>
+                </View>
+              </Animated.View>
+
+              <Animated.View entering={FadeInDown.delay(800).duration(800)} style={styles.successActionsContainer}>
+                <TouchableOpacity 
+                  onPress={handleOpen}
+                  activeOpacity={0.8}
+                  style={styles.mainActionWrapper}
+                >
+                  <LinearGradient
+                    colors={[colors.primary, '#4F46E5']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.slickPrimaryBtn}
+                  >
+                    <Icon name="eye-outline" size={22} color="#FFFFFF" />
+                    <Text style={styles.primaryActionText}>View Document</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+
+                <View style={styles.secondaryActionsRow}>
+                  <TouchableOpacity 
+                    style={[styles.slickSecondaryBtn, { backgroundColor: colors.card, borderColor: colors.border }]} 
+                    onPress={handleShare}
+                    activeOpacity={0.7}
+                  >
+                    <Icon name="share-variant-outline" size={20} color={colors.text} />
+                    <Text style={[styles.secondaryActionText, { color: colors.text }]}>Share</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                    style={[styles.slickSecondaryBtn, { backgroundColor: colors.card, borderColor: colors.border }]} 
+                    onPress={resetConversion}
+                    activeOpacity={0.7}
+                  >
+                    <Icon name="plus-circle-outline" size={20} color={colors.text} />
+                    <Text style={[styles.secondaryActionText, { color: colors.text }]}>Create New</Text>
+                  </TouchableOpacity>
+                </View>
+              </Animated.View>
+
+              <Animated.View entering={FadeInDown.delay(1000).duration(800)} style={styles.footerInfo}>
+                <Icon name="shield-check-outline" size={16} color={colors.success || '#10B981'} />
+                <Text style={[styles.footerInfoText, { color: colors.textSecondary }]}>Saved securely in your local storage</Text>
+              </Animated.View>
+            </ScrollView>
           </View>
         ) : (
-          /* MAIN VIEW */
           <View style={{ flex: 1 }}>
+            {/* MAIN VIEW */}
             <View style={styles.header}>
               <TouchableOpacity style={styles.headerIcon} onPress={() => (navigation as any).openDrawer()}>
                 <Icon name="menu" size={24} color={colors.text} />
@@ -411,6 +467,7 @@ const ImageToPdfScreen = ({ navigation, route }: any) => {
                 requestOptions={{
                   requestNonPersonalizedAdsOnly: true,
                 }}
+                onAdFailedToLoad={(error) => console.error('Ad failed to load:', error)}
               />
             </View>
 
@@ -675,6 +732,133 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
   },
+  // Slick Success View Styles
+  successIllustration: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 40,
+    position: 'relative',
+  },
+  gradientCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  confettiContainer: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  confetti: {
+    position: 'absolute',
+    width: 8,
+    height: 12,
+    borderRadius: 2,
+  },
+  textCenter: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  premiumResultCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    padding: 20,
+    borderRadius: 24,
+    borderWidth: 1,
+    marginBottom: 40,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  fileIconWrapper: {
+    width: 64,
+    height: 64,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  fileDetails: {
+    flex: 1,
+  },
+  fileNameText: {
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  fileMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  fileMetaText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  dot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    marginHorizontal: 8,
+  },
+  successActionsContainer: {
+    width: '100%',
+    gap: 16,
+  },
+  mainActionWrapper: {
+    width: '100%',
+    borderRadius: 16,
+    overflow: 'hidden',
+    elevation: 4,
+    shadowColor: '#4F46E5',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  slickPrimaryBtn: {
+    height: 64,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  secondaryActionsRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  slickSecondaryBtn: {
+    flex: 1,
+    height: 60,
+    borderRadius: 16,
+    borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+  },
+  footerInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 40,
+    paddingBottom: 40,
+    gap: 8,
+  },
+  footerInfoText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
   bottomNavContainer: {
     height: 100,
     justifyContent: 'center',
@@ -707,8 +891,10 @@ const styles = StyleSheet.create({
   },
   bannerContainer: {
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    paddingVertical: 8,
+    justifyContent: 'center',
+    width: '100%',
+    minHeight: 60,
+    marginBottom: 90, // Space for BottomNav
     backgroundColor: 'transparent',
   },
   qualitySection: {

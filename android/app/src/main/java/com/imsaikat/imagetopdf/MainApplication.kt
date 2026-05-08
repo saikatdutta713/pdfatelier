@@ -1,4 +1,4 @@
-package com.imagetopdf
+package com.imsaikat.imagetopdf
 
 import android.app.Application
 import com.facebook.react.PackageList

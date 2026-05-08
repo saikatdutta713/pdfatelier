@@ -9,6 +9,7 @@ import {
   StatusBar,
   Alert,
   Platform,
+  AppState,
 } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -16,17 +17,35 @@ import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
 import BottomNav from '../components/BottomNav';
 import EmptyState from '../components/EmptyState';
-import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
+import { BannerAd, BannerAdSize, TestIds, InterstitialAd, AdEventType } from 'react-native-google-mobile-ads';
 import { formatFileSize } from '../utils/pdfHelper';
+import { checkStoragePermission, requestStoragePermission } from '../utils/permissions';
 
-const bannerAdUnitId = __DEV__ ? TestIds.BANNER : 'ca-app-pub-1160568075790150/7611090332';
+const adUnitId = __DEV__ ? TestIds.INTERSTITIAL : 'ca-app-pub-1160568075790150/9036704803';
+const interstitial = InterstitialAd.createForAdRequest(adUnitId, {
+  requestNonPersonalizedAdsOnly: true,
+});
+
+const bannerAdUnitId = __DEV__ ? TestIds.BANNER : 'ca-app-pub-1160568075790150/3063915712';
 
 const MyFilesScreen = ({ navigation }: any) => {
   const { colors, isDark } = useTheme();
   const [files, setFiles] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [adLoaded, setAdLoaded] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = interstitial.addAdEventListener(AdEventType.LOADED, () => {
+      setAdLoaded(true);
+    });
+    interstitial.load();
+    return () => unsubscribe();
+  }, []);
 
   const loadFiles = useCallback(async () => {
+    const hasPermission = await requestStoragePermission();
+    if (!hasPermission) return;
+
     try {
       const downloadPath = RNFS.DocumentDirectoryPath;
       const result = await RNFS.readDir(downloadPath);
@@ -56,7 +75,17 @@ const MyFilesScreen = ({ navigation }: any) => {
     const unsubscribe = navigation.addListener('focus', () => {
       loadFiles();
     });
-    return unsubscribe;
+
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (nextAppState === 'active') {
+        loadFiles();
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      subscription.remove();
+    };
   }, [navigation, loadFiles]);
 
   const onRefresh = async () => {
@@ -109,7 +138,14 @@ const MyFilesScreen = ({ navigation }: any) => {
           renderItem={({ item, index }) => (
             <TouchableOpacity 
               style={[styles.fileCard, { backgroundColor: colors.card }]}
-              onPress={() => navigation.navigate('PdfViewer', { path: item.path, fileName: item.name })}
+              onPress={() => {
+                if (adLoaded) {
+                  interstitial.show();
+                  setAdLoaded(false);
+                  interstitial.load();
+                }
+                navigation.navigate('PdfViewer', { path: item.path, fileName: item.name });
+              }}
               activeOpacity={0.7}
             >
               <View style={[
@@ -182,6 +218,7 @@ const MyFilesScreen = ({ navigation }: any) => {
             requestOptions={{
               requestNonPersonalizedAdsOnly: true,
             }}
+            onAdFailedToLoad={(error) => console.error('Ad failed to load:', error)}
           />
         </View>
 
@@ -323,7 +360,9 @@ const styles = StyleSheet.create({
   bannerContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
+    width: '100%',
+    minHeight: 60,
+    marginBottom: 90, // Space for BottomNav
     backgroundColor: 'transparent',
   },
   bottomNavContainer: {

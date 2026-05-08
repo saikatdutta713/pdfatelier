@@ -25,7 +25,7 @@ const Sidebar: React.FC<DrawerContentComponentProps> = (props) => {
           await Share.open({
             title: 'Share PDF Laboratory',
             message: 'Check out this amazing PDF tool!',
-            url: Platform.OS === 'android' ? 'https://play.google.com/store/apps/details?id=com.imagetopdf' : 'https://apps.apple.com/app/id123456789',
+            url: Platform.OS === 'android' ? 'https://play.google.com/store/apps/details?id=com.imsaikat.imagetopdf' : 'https://apps.apple.com/app/id123456789',
           });
         } catch (err) {
           console.log(err);
@@ -33,10 +33,10 @@ const Sidebar: React.FC<DrawerContentComponentProps> = (props) => {
         break;
       case 'action_rate':
         const url = Platform.OS === 'android' 
-          ? 'market://details?id=com.imagetopdf' 
+          ? 'market://details?id=com.imsaikat.imagetopdf' 
           : 'itms-apps://itunes.apple.com/app/id123456789?action=write-review';
         Linking.openURL(url).catch(() => {
-          Linking.openURL('https://play.google.com/store/apps/details?id=com.imagetopdf');
+          Linking.openURL('https://play.google.com/store/apps/details?id=com.imsaikat.imagetopdf');
         });
         break;
       case 'action_help':

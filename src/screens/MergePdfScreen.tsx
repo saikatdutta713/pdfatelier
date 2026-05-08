@@ -14,6 +14,9 @@ import { useSettings } from '../context/SettingsContext';
 import { displayNotification } from '../utils/notifications';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import BottomNav from '../components/BottomNav';
+import LinearGradient from 'react-native-linear-gradient';
+import Animated, { FadeInUp, FadeInDown } from 'react-native-reanimated';
+import { ScrollView } from 'react-native';
 import DocumentPicker from 'react-native-document-picker';
 import { PDFDocument } from 'pdf-lib';
 import RNFS from 'react-native-fs';
@@ -26,12 +29,13 @@ import InfoModal from '../components/InfoModal';
 import { InterstitialAd, AdEventType, TestIds, BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
 import Share from 'react-native-share';
 import { formatFileSize } from '../utils/pdfHelper';
+import { requestStoragePermission } from '../utils/permissions';
 import { decode as atob } from 'base-64';
 
 const { width } = Dimensions.get('window');
 
 const adUnitId = __DEV__ ? TestIds.INTERSTITIAL : 'ca-app-pub-1160568075790150/9036704803';
-const bannerAdUnitId = __DEV__ ? TestIds.BANNER : 'ca-app-pub-1160568075790150/7611090332';
+const bannerAdUnitId = __DEV__ ? TestIds.BANNER : 'ca-app-pub-1160568075790150/3063915712';
 const interstitial = InterstitialAd.createForAdRequest(adUnitId, {
   requestNonPersonalizedAdsOnly: true,
 });
@@ -73,6 +77,9 @@ const MergePdfScreen = ({ navigation }: any) => {
   }, []);
 
   const selectFiles = async () => {
+    const hasPermission = await requestStoragePermission();
+    if (!hasPermission) return;
+
     try {
       const results = await DocumentPicker.pick({
         type: [DocumentPicker.types.pdf],
@@ -232,9 +239,10 @@ const MergePdfScreen = ({ navigation }: any) => {
           type={modalConfig.type}
           onClose={() => setModalVisible(false)}
           onConfirm={modalConfig.onConfirm}
-        />        {showSuccess && successData ? (
-          /* SUCCESS VIEW */
+        />
+        {showSuccess && successData ? (
           <View style={{ flex: 1 }}>
+            {/* SUCCESS VIEW */}
             <View style={styles.header}>
               <TouchableOpacity style={styles.headerIcon} onPress={() => setShowSuccess(false)}>
                 <Icon name="arrow-left" size={24} color={colors.text} />
@@ -243,57 +251,104 @@ const MergePdfScreen = ({ navigation }: any) => {
               <View style={{ width: 44 }} />
             </View>
 
-            <View style={styles.successContent}>
-              <View style={styles.successIconWrapper}>
-                <View style={[styles.successBadge, { backgroundColor: colors.primary }]}>
-                  <Icon name="check" size={50} color="#FFFFFF" />
+            <ScrollView contentContainerStyle={styles.successContent} showsVerticalScrollIndicator={false}>
+              <Animated.View 
+                entering={FadeInUp.delay(200).duration(800)}
+                style={styles.successIllustration}
+              >
+                <LinearGradient
+                  colors={[colors.primary, colors.primary + '99']}
+                  style={styles.gradientCircle}
+                >
+                  <Icon name="layers-check" size={60} color="#FFFFFF" />
+                </LinearGradient>
+                <View style={[styles.confettiContainer, { opacity: 0.6 }]}>
+                  {[...Array(6)].map((_, i) => (
+                    <View 
+                      key={i} 
+                      style={[
+                        styles.confetti, 
+                        { 
+                          backgroundColor: i % 2 === 0 ? colors.primary : colors.secondary || colors.primary,
+                          transform: [{ rotate: `${i * 60}deg` }, { translateY: -70 }]
+                        }
+                      ]} 
+                    />
+                  ))}
                 </View>
-              </View>
+              </Animated.View>
               
-              <Text style={[styles.successMainTitle, { color: colors.text }]}>PDF Merged{"\n"}Successfully</Text>
-              <Text style={[styles.successSubTitle, { color: colors.textSecondary }]}>
-                Your combined document is ready to be shared or saved.
-              </Text>
+              <Animated.View entering={FadeInDown.delay(400).duration(800)} style={styles.textCenter}>
+                <Text style={[styles.successMainTitle, { color: colors.text }]}>All Joined!</Text>
+                <Text style={[styles.successSubTitle, { color: colors.textSecondary }]}>
+                  Your PDFs have been perfectly merged into a single document.
+                </Text>
+              </Animated.View>
 
-              <View style={[styles.resultCard, { backgroundColor: colors.card }]}>
-                <View style={styles.resultIconBg}>
-                  <Icon name="file-document-outline" size={32} color={colors.textTertiary} />
+              <Animated.View 
+                entering={FadeInDown.delay(600).duration(800)}
+                style={[styles.premiumResultCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+              >
+                <View style={[styles.fileIconWrapper, { backgroundColor: colors.primary + '15' }]}>
+                  <Icon name="file-pdf-box" size={40} color={colors.primary} />
                 </View>
-                <View style={styles.resultInfo}>
-                  <Text style={[styles.resultName, { color: colors.text }]} numberOfLines={1}>{successData.name}</Text>
-                  <Text style={[styles.resultMeta, { color: colors.textSecondary }]}>{successData.size} • JUST NOW</Text>
+                <View style={styles.fileDetails}>
+                  <Text style={[styles.fileNameText, { color: colors.text }]} numberOfLines={1}>{successData.name}</Text>
+                  <View style={styles.fileMetaRow}>
+                    <Text style={[styles.fileMetaText, { color: colors.textSecondary }]}>{successData.size}</Text>
+                    <View style={[styles.dot, { backgroundColor: colors.textTertiary }]} />
+                    <Text style={[styles.fileMetaText, { color: colors.textSecondary }]}>Merged PDF</Text>
+                  </View>
                 </View>
-                <TouchableOpacity style={styles.moreOptions}>
-                   <Icon name="dots-vertical" size={20} color={colors.textSecondary} />
-                </TouchableOpacity>
-              </View>
+              </Animated.View>
 
-              <View style={styles.successActions}>
+              <Animated.View entering={FadeInDown.delay(800).duration(800)} style={styles.successActionsContainer}>
                 <TouchableOpacity 
                   onPress={handleOpen}
-                  style={[styles.primaryActionBtn, { backgroundColor: colors.primary }]}
+                  activeOpacity={0.8}
+                  style={styles.mainActionWrapper}
                 >
-                  <Icon name="open-in-new" size={22} color="#FFFFFF" />
-                  <Text style={styles.primaryActionText}>Open</Text>
+                  <LinearGradient
+                    colors={[colors.primary, '#4F46E5']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.slickPrimaryBtn}
+                  >
+                    <Icon name="eye-outline" size={22} color="#FFFFFF" />
+                    <Text style={styles.primaryActionText}>View Merged File</Text>
+                  </LinearGradient>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={[styles.secondaryActionBtn, { backgroundColor: isDark ? '#1E293B' : '#E2E8F0' }]} onPress={handleShare}>
-                  <Icon name="share-variant" size={22} color={isDark ? "#dae2fd" : colors.primary} />
-                  <Text style={[styles.secondaryActionText, { color: isDark ? "#dae2fd" : colors.primary }]}>Share</Text>
-                </TouchableOpacity>
-              </View>
-
-              <TouchableOpacity style={styles.footerLink} onPress={() => setShowSuccess(false)}>
-                <View style={styles.footerLinkRow}>
-                  <Icon name="arrow-left" size={20} color={colors.textSecondary} />
-                  <Text style={[styles.footerLinkText, { color: colors.textSecondary }]}>Merge more files</Text>
+                <View style={styles.secondaryActionsRow}>
+                  <TouchableOpacity 
+                    style={[styles.slickSecondaryBtn, { backgroundColor: colors.card, borderColor: colors.border }]} 
+                    onPress={handleShare}
+                    activeOpacity={0.7}
+                  >
+                    <Icon name="share-variant-outline" size={20} color={colors.text} />
+                    <Text style={[styles.secondaryActionText, { color: colors.text }]}>Share</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                    style={[styles.slickSecondaryBtn, { backgroundColor: colors.card, borderColor: colors.border }]} 
+                    onPress={() => setShowSuccess(false)}
+                    activeOpacity={0.7}
+                  >
+                    <Icon name="plus-circle-outline" size={20} color={colors.text} />
+                    <Text style={[styles.secondaryActionText, { color: colors.text }]}>Merge More</Text>
+                  </TouchableOpacity>
                 </View>
-              </TouchableOpacity>
-            </View>
+              </Animated.View>
+
+              <Animated.View entering={FadeInDown.delay(1000).duration(800)} style={styles.footerInfo}>
+                <Icon name="check-decagram-outline" size={16} color={colors.success || '#10B981'} />
+                <Text style={[styles.footerInfoText, { color: colors.textSecondary }]}>High-fidelity PDF output</Text>
+              </Animated.View>
+            </ScrollView>
           </View>
         ) : (
-          /* MAIN VIEW */
           <View style={{ flex: 1 }}>
+            {/* MAIN VIEW */}
             <View style={styles.header}>
               <TouchableOpacity style={styles.headerIcon} onPress={() => (navigation as any).openDrawer()}>
                 <Icon name="menu" size={24} color={colors.text} />
@@ -642,6 +697,133 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
   },
+  // Slick Success View Styles
+  successIllustration: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 40,
+    position: 'relative',
+  },
+  gradientCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  confettiContainer: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  confetti: {
+    position: 'absolute',
+    width: 8,
+    height: 12,
+    borderRadius: 2,
+  },
+  textCenter: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  premiumResultCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    padding: 20,
+    borderRadius: 24,
+    borderWidth: 1,
+    marginBottom: 40,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  fileIconWrapper: {
+    width: 64,
+    height: 64,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  fileDetails: {
+    flex: 1,
+  },
+  fileNameText: {
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  fileMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  fileMetaText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  dot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    marginHorizontal: 8,
+  },
+  successActionsContainer: {
+    width: '100%',
+    gap: 16,
+  },
+  mainActionWrapper: {
+    width: '100%',
+    borderRadius: 16,
+    overflow: 'hidden',
+    elevation: 4,
+    shadowColor: '#4F46E5',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  slickPrimaryBtn: {
+    height: 64,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  secondaryActionsRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  slickSecondaryBtn: {
+    flex: 1,
+    height: 60,
+    borderRadius: 16,
+    borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+  },
+  footerInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 40,
+    paddingBottom: 40,
+    gap: 8,
+  },
+  footerInfoText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
   bottomNavContainer: {
     height: 100,
     justifyContent: 'center',
@@ -675,7 +857,9 @@ const styles = StyleSheet.create({
   bannerContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
+    width: '100%',
+    minHeight: 60,
+    marginBottom: 90, // Space for BottomNav
     backgroundColor: 'transparent',
   },
   infoCard: {

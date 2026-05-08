@@ -12,12 +12,18 @@ const App = () => {
     console.log('App starting defensive check...');
     try {
       if (mobileAds && typeof mobileAds === 'function') {
-        mobileAds()
-          .initialize()
-          .then(adapterStatuses => {
-            console.log('AdMob Initialized:', adapterStatuses);
-          })
-          .catch(err => console.error('AdMob Init Error:', err));
+        const ads = mobileAds();
+        ads.setRequestConfiguration({
+          testDeviceIds: ['1C52D41B33AF0361BD9686A672BFE4EC'],
+        })
+        .then(() => ads.initialize())
+        .then(adapterStatuses => {
+          console.log('AdMob Initialized Status:', JSON.stringify(adapterStatuses, null, 2));
+          Object.keys(adapterStatuses).forEach(key => {
+            console.log(`Adapter ${key} is ${adapterStatuses[key].state}`);
+          });
+        })
+        .catch(err => console.error('AdMob Init Error:', err));
       } else {
         console.warn('mobileAds module not found');
       }

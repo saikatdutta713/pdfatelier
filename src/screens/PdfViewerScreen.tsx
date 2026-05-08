@@ -12,10 +12,60 @@ import Pdf from 'react-native-pdf';
 import { useTheme } from '../context/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Share from 'react-native-share';
+import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
+import { checkStoragePermission, requestStoragePermission } from '../utils/permissions';
+import { useEffect, useState } from 'react';
+import { AppState } from 'react-native';
+
+const bannerAdUnitId = __DEV__ ? TestIds.BANNER : 'ca-app-pub-1160568075790150/7611090332';
 
 const PdfViewerScreen = ({ route, navigation }: any) => {
   const { colors, isDark } = useTheme();
   const { path, fileName } = route.params;
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkPermission = async () => {
+      // Use check first, then request if needed
+      const currentStatus = await checkStoragePermission();
+      if (currentStatus) {
+        setHasPermission(true);
+      } else {
+        const granted = await requestStoragePermission();
+        setHasPermission(granted);
+      }
+    };
+    
+    checkPermission();
+
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (nextAppState === 'active') {
+        checkPermission();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
+  if (hasPermission === false) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }]}>
+        <Icon name="shield-alert-outline" size={64} color={colors.error} />
+        <Text style={{ color: colors.text, fontSize: 18, fontWeight: '700', marginTop: 16 }}>Permission Denied</Text>
+        <Text style={{ color: colors.textSecondary, textAlign: 'center', marginHorizontal: 40, marginTop: 8 }}>
+          Storage access is required to view this PDF. Please enable it in settings.
+        </Text>
+        <TouchableOpacity 
+          style={{ backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12, marginTop: 24 }}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={{ color: '#FFFFFF', fontWeight: '800' }}>Go Back</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
   const source = { uri: `file://${path}`, cache: true };
 
   const handleShare = async () => {
@@ -64,6 +114,16 @@ const PdfViewerScreen = ({ route, navigation }: any) => {
           style={[styles.pdf, { backgroundColor: isDark ? colors.background : '#525659' }]}
         />
       </View>
+
+      <View style={styles.bannerContainer}>
+        <BannerAd
+          unitId={bannerAdUnitId}
+          size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+          requestOptions={{
+            requestNonPersonalizedAdsOnly: true,
+          }}
+        />
+      </View>
     </SafeAreaView>
   );
 };
@@ -103,6 +163,12 @@ const styles = StyleSheet.create({
     width: Dimensions.get('window').width,
     height: Dimensions.get('window').height,
     backgroundColor: '#525659',
+  },
+  bannerContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    backgroundColor: 'transparent',
   },
 });
 
