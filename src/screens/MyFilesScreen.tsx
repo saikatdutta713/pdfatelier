@@ -18,15 +18,16 @@ import Share from 'react-native-share';
 import BottomNav from '../components/BottomNav';
 import EmptyState from '../components/EmptyState';
 import { BannerAd, BannerAdSize, TestIds, InterstitialAd, AdEventType } from 'react-native-google-mobile-ads';
+import { ADMOB_BANNER_ID, ADMOB_INTERSTITIAL_ID } from '@env';
 import { formatFileSize } from '../utils/pdfHelper';
 import { checkStoragePermission, requestStoragePermission } from '../utils/permissions';
 
-const adUnitId = __DEV__ ? TestIds.INTERSTITIAL : 'ca-app-pub-1160568075790150/9036704803';
+const adUnitId = __DEV__ ? TestIds.INTERSTITIAL : ADMOB_INTERSTITIAL_ID;
 const interstitial = InterstitialAd.createForAdRequest(adUnitId, {
   requestNonPersonalizedAdsOnly: true,
 });
 
-const bannerAdUnitId = __DEV__ ? TestIds.BANNER : 'ca-app-pub-1160568075790150/3063915712';
+const bannerAdUnitId = __DEV__ ? TestIds.BANNER : ADMOB_BANNER_ID;
 
 const MyFilesScreen = ({ navigation }: any) => {
   const { colors, isDark } = useTheme();

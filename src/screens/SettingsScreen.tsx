@@ -6,9 +6,10 @@ import { useSettings } from '../context/SettingsContext';
 import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 import InfoModal from '../components/InfoModal';
 import RNFS from 'react-native-fs';
+import { ADMOB_BANNER_ID } from '@env';
 import BottomNav from '../components/BottomNav';
 
-const bannerAdUnitId = __DEV__ ? TestIds.BANNER : 'ca-app-pub-1160568075790150/3063915712';
+const bannerAdUnitId = __DEV__ ? TestIds.BANNER : ADMOB_BANNER_ID;
 
 const SettingsScreen = ({ navigation }: any) => {
   const { theme, toggleTheme, colors, isDark } = useTheme();

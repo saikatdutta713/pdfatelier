@@ -4,9 +4,10 @@ import PdfCard from '../components/PdfCard';
 import { useTheme } from '../context/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
+import { ADMOB_BANNER_ID } from '@env';
 import BottomNav from '../components/BottomNav';
 
-const bannerAdUnitId = __DEV__ ? TestIds.BANNER : 'ca-app-pub-1160568075790150/3063915712';
+const bannerAdUnitId = __DEV__ ? TestIds.BANNER : ADMOB_BANNER_ID;
 
 const HomeScreen = ({ navigation }: any) => {
   const { colors, isDark } = useTheme();

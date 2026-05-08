@@ -27,6 +27,7 @@ import DraggableFlatList, {
 import ProgressLoader from '../components/ProgressLoader';
 import InfoModal from '../components/InfoModal';
 import { InterstitialAd, AdEventType, TestIds, BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
+import { ADMOB_BANNER_ID, ADMOB_INTERSTITIAL_ID } from '@env';
 import Share from 'react-native-share';
 import { formatFileSize } from '../utils/pdfHelper';
 import { requestStoragePermission } from '../utils/permissions';
@@ -34,8 +35,8 @@ import { decode as atob } from 'base-64';
 
 const { width } = Dimensions.get('window');
 
-const adUnitId = __DEV__ ? TestIds.INTERSTITIAL : 'ca-app-pub-1160568075790150/9036704803';
-const bannerAdUnitId = __DEV__ ? TestIds.BANNER : 'ca-app-pub-1160568075790150/3063915712';
+const adUnitId = __DEV__ ? TestIds.INTERSTITIAL : ADMOB_INTERSTITIAL_ID;
+const bannerAdUnitId = __DEV__ ? TestIds.BANNER : ADMOB_BANNER_ID;
 const interstitial = InterstitialAd.createForAdRequest(adUnitId, {
   requestNonPersonalizedAdsOnly: true,
 });
