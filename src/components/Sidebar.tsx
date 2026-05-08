@@ -13,7 +13,7 @@ const Sidebar: React.FC<DrawerContentComponentProps> = (props) => {
     { name: 'MergePdf', icon: 'arrow-up-bold-outline', label: 'Merge PDFs', screen: 'MergePdf' },
     { name: 'MyFiles', icon: 'folder-outline', label: 'Saved PDFs', screen: 'MyFiles' },
     { name: 'Settings', icon: 'cog-outline', label: 'Settings', screen: 'Settings' },
-    { name: 'Premium', icon: 'crown-outline', label: 'Remove Ads', screen: 'Premium' },
+    // { name: 'Premium', icon: 'crown-outline', label: 'Remove Ads', screen: 'Premium' },
     { name: 'ShareApp', icon: 'share-variant-outline', label: 'Share with Friends', screen: 'action_share' },
     { name: 'RateUs', icon: 'star-outline', label: 'Rate our App', screen: 'action_rate' },
   ];
